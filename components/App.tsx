@@ -7,8 +7,8 @@ import { Profile } from './Profile';
 import { LessonView } from './LessonView';
 import { AdminDashboard } from './AdminDashboard';
 import { SmartNav } from './SmartNav';
-import { Storage } from './services/storage';
-import { telegram } from './services/telegramService';
+import { Storage } from '../services/storage';
+import { telegram } from '../services/telegramService';
 import { Toast, ToastMessage } from './Toast';
 import { SCENARIOS, SalesArena } from './SalesArena'; 
 import { NotebookView } from './NotebookView';
@@ -16,8 +16,8 @@ import { MaterialsView } from './MaterialsView';
 import { StreamsView } from './StreamsView';
 import { HabitTracker } from './HabitTracker';
 import { ModuleList } from './ModuleList';
-import { Backend } from './services/backendService';
-import { XPService } from './services/xpService';
+import { Backend } from '../services/backendService';
+import { XPService } from '../services/xpService';
 
 const DEFAULT_CONFIG: AppConfig = {
   appName: 'SalesPro: 300 Spartans',
