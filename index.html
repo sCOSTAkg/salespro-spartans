@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="https://picsum.photos/32/32" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#050505" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>SalesPro: 300 Spartans</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              body: 'var(--bg-body)',
+              surface: 'var(--bg-surface)',
+              card: 'var(--bg-card)',
+              'text-primary': 'var(--text-primary)',
+              'text-secondary': 'var(--text-secondary)',
+              'border-color': 'var(--border-color)',
+              spartan: {
+                gold: '#D4AF37',
+                red: '#BF3030',
+                dark: '#050505',
+                purple: '#6C5DD3'
+              }
+            },
+            animation: {
+              'blob': 'blob 10s infinite',
+              'gradient-x': 'gradient-x 15s ease infinite',
+              'shimmer': 'shimmer 2.5s linear infinite',
+              'float': 'float 3s ease-in-out infinite',
+            },
+            keyframes: {
+              blob: {
+                '0%, 100%': { transform: 'translate(0px, 0px) scale(1)' },
+                '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              },
+              shimmer: {
+                '0%': { transform: 'translateX(-100%)' },
+                '100%': { transform: 'translateX(100%)' }
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --bg-body: #F0F2F5;
+        --bg-surface: #FFFFFF;
+        --bg-card: #FFFFFF;
+        --text-primary: #1A1C23;
+        --text-secondary: #64748B;
+        --border-color: rgba(0, 0, 0, 0.08);
+        --glass-bg: rgba(255, 255, 255, 0.8);
+        --color-accent: #6C5DD3;
+        --safe-top: env(safe-area-inset-top, 20px);
+        --safe-bottom: env(safe-area-inset-bottom, 20px);
+      }
+
+      html.dark :root {
+        --bg-body: #030304; 
+        --bg-surface: #0F1115;
+        --bg-card: #16181D;
+        --text-primary: #FFFFFF;
+        --text-secondary: #94A3B8;
+        --border-color: rgba(255, 255, 255, 0.08);
+        --glass-bg: rgba(15, 17, 21, 0.85);
+      }
+
+      body {
+        background-color: var(--bg-body);
+        color: var(--text-primary);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+      }
+
+      /* Animated Background Mesh */
+      .mesh-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        overflow: hidden;
+        background: var(--bg-body);
+      }
+
+      .mesh-orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.15;
+        pointer-events: none;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: var(--color-accent);
+        border-radius: 20px;
+      }
+      
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+
+      .island-blur {
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 
+            0 4px 6px -1px rgba(0, 0, 0, 0.1),
+            0 20px 40px -10px rgba(0, 0, 0, 0.4),
+            inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      }
+
+      @keyframes slide-up-island {
+        from { transform: translateY(100px) scale(0.9); opacity: 0; }
+        to { transform: translateY(0) scale(1); opacity: 1; }
+      }
+
+      .animate-island {
+        animation: slide-up-island 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
+    "react-player": "https://esm.sh/react-player@^3.4.0",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.95.2",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.3",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "react-markdown": "https://esm.sh/react-markdown@^10.1.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div class="mesh-bg">
+        <div class="mesh-orb w-[80%] h-[80%] -top-[20%] -left-[20%] bg-[#6C5DD3] animate-blob"></div>
+        <div class="mesh-orb w-[70%] h-[70%] top-[40%] -right-[10%] bg-[#FFAB7B] animate-blob" style="animation-delay: -3s"></div>
+        <div class="mesh-orb w-[60%] h-[60%] -bottom-[10%] left-[20%] bg-[#4F46E5] animate-blob" style="animation-delay: -6s"></div>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
