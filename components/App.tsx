@@ -16,17 +16,17 @@ import { SmartNav } from './SmartNav';
 import { SystemHealthAgent } from './SystemHealthAgent';
 import { ChatAssistant } from './ChatAssistant';
 import { Toast } from './Toast';
-import { 
-  Tab, 
-  UserProgress, 
-  Module, 
-  Lesson, 
-  Material, 
-  Stream, 
-  CalendarEvent, 
-  ArenaScenario, 
+import {
+  Tab,
+  UserProgress,
+  Module,
+  Lesson,
+  Material,
+  Stream,
+  CalendarEvent,
+  ArenaScenario,
   AppNotification,
-  AppConfig 
+  AppConfig
 } from '../types';
 import { airtable } from '../services/airtableService';
 import { Storage } from '../services/storage';
@@ -34,26 +34,40 @@ import { Logger } from '../services/logger';
 import { telegram } from '../services/telegramService';
 
 const App: React.FC = () => {
-  const [currentTab, setCurrentTab] = useState<Tab>('welcome');
+  const [currentTab, setCurrentTab] = useState<Tab>(Tab.WELCOME);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [adminSubTab, setAdminSubTab] = useState<string>('OVERVIEW');
   const [userProgress, setUserProgress] = useState<UserProgress>(() => {
     const saved = Storage.get<UserProgress>('userProgress');
     return saved || {
-      userId: crypto.randomUUID(),
-      username: 'Гость',
-      role: 'guest',
+      name: 'Гость',
+      role: 'STUDENT' as const,
       isAuthenticated: false,
       completedLessonIds: [],
+      submittedHomeworks: [],
       xp: 0,
       level: 1,
-      streak: 0,
-      completedScenarioIds: [],
-      achievements: [],
-      currentModule: null,
-      joinedDate: new Date().toISOString(),
-      lastActive: new Date().toISOString(),
-      telegramId: telegram.initDataUnsafe?.user?.id,
-      telegramUsername: telegram.initDataUnsafe?.user?.username
+      chatHistory: [],
+      theme: 'DARK' as const,
+      notifications: {
+        pushEnabled: false,
+        telegramSync: false,
+        deadlineReminders: true,
+        chatNotifications: true
+      },
+      notebook: [],
+      habits: [],
+      goals: [],
+      stats: {
+        storiesPosted: 0,
+        questionsAsked: {},
+        referralsCount: 0,
+        streamsVisited: [],
+        homeworksSpeed: {},
+        initiativesCount: 0
+      },
+      telegramId: telegram.user?.id?.toString(),
+      telegramUsername: telegram.user?.username
     };
   });
 
@@ -87,14 +101,14 @@ const App: React.FC = () => {
         fetchedNotifications,
         fetchedConfig
       ] = await Promise.all([
-        airtable.fetchModules(),
-        airtable.fetchMaterials(),
-        airtable.fetchStreams(),
-        airtable.fetchEvents(),
-        airtable.fetchScenarios(),
-        airtable.fetchUsers(),
-        airtable.fetchNotifications(),
-        airtable.fetchConfig()
+        airtable.getModulesWithLessons(),
+        airtable.getMaterials(),
+        airtable.getStreams(),
+        airtable.getEvents(),
+        airtable.getScenarios(),
+        airtable.getAllUsers(),
+        airtable.getNotifications(),
+        airtable.getConfigRecord()
       ]);
 
       setModules(fetchedModules);
@@ -136,27 +150,27 @@ const App: React.FC = () => {
     }
     const updatedUser: UserProgress = {
       ...userProgress,
-      username,
+      name: username,
       isAuthenticated: true,
-      role: username.toLowerCase() === 'admin' ? 'admin' : 'student',
-      lastActive: new Date().toISOString()
+      role: username.toLowerCase() === 'admin' ? 'ADMIN' : 'STUDENT',
+      lastSyncTimestamp: Date.now()
     };
     setUserProgress(updatedUser);
-    setCurrentTab('home');
+    setCurrentTab(Tab.HOME);
     showToastMessage(`Добро пожаловать, ${username}!`, 'success');
     telegram.haptic('success');
     return true;
   };
 
   const handleLogout = () => {
-    setUserProgress({ ...userProgress, isAuthenticated: false, role: 'guest' });
-    setCurrentTab('welcome');
+    setUserProgress({ ...userProgress, isAuthenticated: false, role: 'STUDENT' });
+    setCurrentTab(Tab.WELCOME);
     showToastMessage('Вы вышли из системы', 'info');
   };
 
   const handleSelectLesson = (lesson: Lesson) => {
     setSelectedLesson(lesson);
-    setCurrentTab('lesson');
+    setCurrentTab(Tab.LESSON);
   };
 
   const handleCompleteLesson = (lessonId: string) => {
@@ -168,7 +182,7 @@ const App: React.FC = () => {
         completedLessonIds: newCompletedIds,
         xp: userProgress.xp + xpGain,
         level: Math.floor((userProgress.xp + xpGain) / 100) + 1,
-        lastActive: new Date().toISOString()
+        lastSyncTimestamp: Date.now()
       });
       showToastMessage(`Урок завершён! +${xpGain} XP`, 'success');
       telegram.haptic('success');
@@ -189,14 +203,14 @@ const App: React.FC = () => {
     }
 
     switch (currentTab) {
-      case 'welcome': return <Welcome onStart={() => setCurrentTab('auth')} />;
-      case 'auth': return <Auth onLogin={handleLogin} onBack={() => setCurrentTab('welcome')} />;
-      case 'home': 
+      case Tab.WELCOME: return <Welcome onStart={() => setCurrentTab(Tab.AUTH)} />;
+      case Tab.AUTH: return <Auth onLogin={handleLogin} onBack={() => setCurrentTab(Tab.WELCOME)} />;
+      case Tab.HOME:
         return (
           <HomeDashboard
             onNavigate={setCurrentTab}
             userProgress={userProgress}
-            onProfileClick={() => setCurrentTab('profile')}
+            onProfileClick={() => setCurrentTab(Tab.PROFILE)}
             modules={modules}
             materials={materials}
             streams={streams}
@@ -208,37 +222,47 @@ const App: React.FC = () => {
             appConfig={appConfig || undefined}
           />
         );
-      case 'profile': 
-        return <Profile userProgress={userProgress} onUpdateUser={handleUpdateUser} onBack={() => setCurrentTab('home')} onLogout={handleLogout} />;
-      case 'admin': 
-        return <AdminDashboard onBack={() => setCurrentTab('home')} appConfig={appConfig} onUpdateConfig={setAppConfig} onSync={() => syncData(true)} />;
-      case 'curator': 
-        return <CuratorDashboard onBack={() => setCurrentTab('home')} allUsers={allUsers} modules={modules} />;
-      case 'lesson': 
+      case Tab.PROFILE:
+        return <Profile userProgress={userProgress} onUpdateUser={handleUpdateUser} onBack={() => setCurrentTab(Tab.HOME)} onLogout={handleLogout} />;
+      case Tab.ADMIN_DASHBOARD:
+        return <AdminDashboard onBack={() => setCurrentTab(Tab.HOME)} appConfig={appConfig} onUpdateConfig={setAppConfig} onSync={() => syncData(true)} />;
+      case Tab.CURATOR:
+        return <CuratorDashboard onBack={() => setCurrentTab(Tab.HOME)} allUsers={allUsers} modules={modules} />;
+      case Tab.LESSON:
         return selectedLesson ? (
-          <LessonView 
-            lesson={selectedLesson} 
-            onBack={() => setCurrentTab('home')} 
-            onComplete={() => handleCompleteLesson(selectedLesson.id)} 
-            isCompleted={userProgress.completedLessonIds.includes(selectedLesson.id)} 
+          <LessonView
+            lesson={selectedLesson}
+            onBack={() => setCurrentTab(Tab.HOME)}
+            onComplete={() => handleCompleteLesson(selectedLesson.id)}
+            isCompleted={userProgress.completedLessonIds.includes(selectedLesson.id)}
           />
         ) : null;
-      case 'materials': return <MaterialsView materials={materials} onBack={() => setCurrentTab('home')} />;
-      case 'streams': return <StreamsView streams={streams} onBack={() => setCurrentTab('home')} />;
-      case 'arena': return <SalesArena scenarios={scenarios} userProgress={userProgress} onUpdateUser={handleUpdateUser} onBack={() => setCurrentTab('home')} />;
-      case 'calendar': return <CalendarView events={events} onBack={() => setCurrentTab('home')} />;
-      case 'notebook': return <NotebookView userId={userProgress.userId} onBack={() => setCurrentTab('home')} />;
-      case 'habits': return <HabitTracker userId={userProgress.userId} onBack={() => setCurrentTab('home')} />;
-      case 'chat': return <ChatAssistant onBack={() => setCurrentTab('home')} />;
-      default: return <Welcome onStart={() => setCurrentTab('auth')} />;
+      case Tab.MATERIALS: return <MaterialsView materials={materials} onBack={() => setCurrentTab(Tab.HOME)} />;
+      case Tab.STREAMS: return <StreamsView streams={streams} onBack={() => setCurrentTab(Tab.HOME)} />;
+      case Tab.ARENA: return <SalesArena scenarios={scenarios} userProgress={userProgress} onUpdateUser={handleUpdateUser} onBack={() => setCurrentTab(Tab.HOME)} />;
+      case Tab.CALENDAR: return <CalendarView events={events} onBack={() => setCurrentTab(Tab.HOME)} />;
+      case Tab.NOTEBOOK: return <NotebookView userId={userProgress.telegramId || 'local'} onBack={() => setCurrentTab(Tab.HOME)} />;
+      case Tab.HABITS: return <HabitTracker userId={userProgress.telegramId || 'local'} onBack={() => setCurrentTab(Tab.HOME)} />;
+      case Tab.CHAT: return <ChatAssistant onBack={() => setCurrentTab(Tab.HOME)} />;
+      default: return <Welcome onStart={() => setCurrentTab(Tab.AUTH)} />;
     }
   };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a' }}>
       {renderContent()}
-      {userProgress.isAuthenticated && currentTab !== 'welcome' && currentTab !== 'auth' && (
-        <SmartNav currentTab={currentTab} onNavigate={setCurrentTab} userRole={userProgress.role} />
+      {userProgress.isAuthenticated && currentTab !== Tab.WELCOME && currentTab !== Tab.AUTH && (
+        <SmartNav
+          activeTab={currentTab}
+          setActiveTab={setCurrentTab}
+          role={userProgress.role}
+          adminSubTab={adminSubTab}
+          setAdminSubTab={setAdminSubTab}
+          isLessonActive={currentTab === Tab.LESSON}
+          onExitLesson={() => setCurrentTab(Tab.HOME)}
+          notifications={notifications}
+          onClearNotifications={() => setNotifications([])}
+        />
       )}
       {userProgress.isAuthenticated && (
         <SystemHealthAgent isAirtableConfigured={airtable.isConfigured()} onSync={() => syncData(true)} />

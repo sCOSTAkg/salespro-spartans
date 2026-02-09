@@ -255,16 +255,21 @@ export interface AppNotification {
 }
 
 export enum Tab {
-  HOME = 'HOME', 
-  MODULES = 'MODULES', 
-  MATERIALS = 'MATERIALS', 
-  RATING = 'RATING', 
-  ARENA = 'ARENA', 
-  STREAMS = 'STREAMS', 
-  NOTEBOOK = 'NOTEBOOK', 
-  HABITS = 'HABITS', 
-  PROFILE = 'PROFILE',
-  ADMIN_DASHBOARD = 'ADMIN_DASHBOARD'
+  WELCOME = 'welcome',
+  AUTH = 'auth',
+  HOME = 'home',
+  LESSON = 'lesson',
+  MODULES = 'modules',
+  MATERIALS = 'materials',
+  RATING = 'rating',
+  ARENA = 'arena',
+  STREAMS = 'streams',
+  NOTEBOOK = 'notebook',
+  HABITS = 'habits',
+  CHAT = 'chat',
+  PROFILE = 'profile',
+  ADMIN_DASHBOARD = 'admin',
+  CURATOR = 'curator'
 }
 
 export interface ArenaScenario {

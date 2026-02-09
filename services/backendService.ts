@@ -26,13 +26,13 @@ export const Backend = {
     async fetchAllContent() {
         try {
             const [modules, materials, streams, events, scenarios] = await Promise.all([
-                airtable.fetchModules(),
-                airtable.fetchMaterials(),
-                airtable.fetchStreams(),
-                airtable.fetchEvents(),
-                airtable.fetchScenarios()
+                airtable.getModulesWithLessons(),
+                airtable.getMaterials(),
+                airtable.getStreams(),
+                airtable.getEvents(),
+                airtable.getScenarios()
             ]);
-            
+
             return {
                 modules,
                 materials,
@@ -42,13 +42,13 @@ export const Backend = {
             };
         } catch (error) {
             console.error('Error fetching content:', error);
-            return { 
+            return {
                 modules: [],
                 materials: [],
                 streams: [],
                 events: [],
                 scenarios: [],
-                error: 'Failed to fetch content' 
+                error: 'Failed to fetch content'
             };
         }
     },
@@ -57,6 +57,6 @@ export const Backend = {
      * Fetch notifications
      */
     async fetchNotifications() {
-        return await airtable.fetchNotifications();
+        return await airtable.getNotifications();
     }
 };
